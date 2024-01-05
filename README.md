@@ -12,6 +12,6 @@
 * Home Assistant for UI
 
 # Screenshots
-![UI](images/lovelace-screenshot.png?raw=true "Lovelace")
+![UI](images/thermiq-mqtt-screenshot.png?raw=true "ThermIQ Lovelace")
 
 ![UI](images/node-red-screenshot.png?raw=true "Node-RED")
