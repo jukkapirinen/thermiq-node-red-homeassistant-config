@@ -1,6 +1,6 @@
 [
     {
-        "id": "48ddb88.87e3e48",
+        "id": "5f4b1013672733ff",
         "type": "tab",
         "label": "Thermiq",
         "disabled": false,
@@ -8,11 +8,11 @@
         "env": []
     },
     {
-        "id": "d27593ca.20016",
+        "id": "a154ff2dd4453844",
         "type": "function",
-        "z": "48ddb88.87e3e48",
+        "z": "5f4b1013672733ff",
         "name": "Read parser",
-        "func": "function hexdec(input) {\n    input = (input + '').replace(/[^a-f0-9]/gi, '');\n    return parseInt(input, 16);\n}\n\nif (msg.payload.includes('=')) {\n    var tmp = msg.payload.split('=');\n    var regDecimal = hexdec('0x' + tmp[0]);\n    var data = {\n        reg: 'r' + tmp[0].toLowerCase(), // Convert registry to lowercase\n        value: hexdec('0x' + tmp[1])\n    };\n\n    if (data.value > 32767) {\n        data.value -= 65536;\n    }\n\n    if (regDecimal >= 0 && regDecimal <= 126) {\n        msg = {\n            topic: 'ThermIQ/ThermIQ-mqtt/data',\n            payload: {\n                \"Client_Name\": \"ThermIQ_30AEA413D85C\",\n                \"app_info\": \"ThermIQ-mqtt 1.01\",\n                \"reason\": \"T\",\n                [data.reg]: data.value,\n                \"timestamp\": Math.floor(Date.now() / 1000) // Unix timestamp in seconds\n            }\n        };\n\n        return [msg, null];\n    }\n}\n\nreturn [null, null];\n",
+        "func": "function hexdec(input) {\n    input = (input + '').replace(/[^a-f0-9]/gi, '');\n    return parseInt(input, 16);\n}\n\nif (msg.payload.includes('=')) {\n    var tmp = msg.payload.split('=');\n    var regDecimal = hexdec('0x' + tmp[0]);\n    var data = {\n        reg: 'r' + tmp[0].toLowerCase(), // Convert registry to lowercase\n        value: hexdec('0x' + tmp[1])\n    };\n\n    if (data.value > 32767) {\n        data.value -= 65536;\n    }\n\n    if (regDecimal >= 0 && regDecimal <= 127) {\n        msg = {\n            topic: 'ThermIQ/ThermIQ-mqtt/data',\n            payload: {\n                \"Client_Name\": \"ThermIQ_30AEA413D85C\",\n                \"app_info\": \"ThermIQ-mqtt 1.01\",\n                \"reason\": \"T\",\n                [data.reg]: data.value,\n                \"timestamp\": Math.floor(Date.now() / 1000) // Unix timestamp in seconds\n            }\n        };\n\n        return [msg, null];\n    }\n}\n\nreturn [null, null];\n",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -23,15 +23,15 @@
         "y": 120.00000190734863,
         "wires": [
             [
-                "1d9876ef.8ecd79"
+                "a73fb7862b834e41"
             ],
             []
         ]
     },
     {
-        "id": "1d9876ef.8ecd79",
+        "id": "a73fb7862b834e41",
         "type": "mqtt out",
-        "z": "48ddb88.87e3e48",
+        "z": "5f4b1013672733ff",
         "name": "thermiq/state/#",
         "topic": "",
         "qos": "",
@@ -47,11 +47,11 @@
         "wires": []
     },
     {
-        "id": "9438d42f.c7dde8",
+        "id": "6b5e5d5f61d3ad74",
         "type": "function",
-        "z": "48ddb88.87e3e48",
+        "z": "5f4b1013672733ff",
         "name": "Write parser",
-        "func": "function hexdec(input) {\n    input = (input + '').replace(/[^a-f0-9]/gi, '');\n    return parseInt(input, 16);\n}\n\nvar reg = parseInt(\n            msg.topic.substring(\n                msg.topic.lastIndexOf('/') + 1\n            )) + 128;\n            \n//var value = parseInt(msg.payload);\nreg = \"32\";\nvar value = 20;\nif(value < 0) {\n    value += 65536;\n}\n\nif(reg >= 0 && reg <= 255 && value >= 0 && value < 65536) {\n    var valueHI = (value & 65280) >> 8;\n    var valueLO = (value & 255);\n    var a = reg.padStart(2, '0');\n    var b = valueLO.toString(16).padStart(2, '0');\n    var c = valueHI.toString(16).padStart(2, '0');\n\n    var out = {\n        payload: ('atw' + a + c + b).toUpperCase()\n    };\n\n    return [out, null];\n}\n\nreturn [null, null];\n\n",
+        "func": "\nvar jsonString = msg.payload;\n\n// node.warn(\"payload = \" + jsonString);\n\n\nvar registerObj = JSON.parse(jsonString);\n// node.warn(\"registerObj = \" + registerObj);\nvar regKey = Object.keys(registerObj)[0]; \nvar value = parseInt(registerObj[regKey]); \n// node.warn(\"value = \" + value);\n\nif (regKey.startsWith(\"d\")) {\n    // Handle other cases as needed\n    node.warn(\"Change the ThermIQ MQTT Integration to use hexformat.\" + regKey);\n} else if (regKey.startsWith(\"r\")) {\n    var reg = parseInt(regKey.substring(1), 16);\n} else {\n    // Handle other cases as needed\n    node.warn(\"Unsupported prefix:\" + regKey);\n    return;\n}\n\n// node.warn(\"regKey = \" + regKey);\n\n// node.warn(\"reg = \" + reg);\n\nif(value < 0) {\n    value += 65536;\n}\n\n//if(reg >= 0 && reg <= 255 && value >= 0 && value < 65536) {\n// only allow for temp now   \nif (reg == 50 && value >= 0 && value < 65536) {\n    var valueHI = (value & 65280) >> 8;\n    var valueLO = (value & 255);\n    var a = reg.toString(16).padStart(2, '0');\n    var b = valueLO.toString(16).padStart(2, '0');\n    var c = valueHI.toString(16).padStart(2, '0');\n//    node.warn(\"my var abc = \" +  a + c + b);\n    var msg = {\n        payload: ('atw' + a + c + b).toUpperCase()\n    };\n\n    return [msg, null];\n}\n\nreturn [null, null];\n\n",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -62,16 +62,17 @@
         "y": 185.9999485015869,
         "wires": [
             [
-                "fad5e46b.97d518",
-                "99406082dbff6ab3"
+                "cb261068ed7b2834"
             ],
-            []
+            [
+                "2f4017034f49f602"
+            ]
         ]
     },
     {
-        "id": "b191a81843c530f6",
+        "id": "4e2f931437b585a0",
         "type": "trigger",
-        "z": "48ddb88.87e3e48",
+        "z": "5f4b1013672733ff",
         "name": "Read registers 0-32 / 50 - 116",
         "op1": "ATR0020",
         "op2": "ATR3274",
@@ -89,14 +90,14 @@
         "y": 300,
         "wires": [
             [
-                "252c1115f8b1128a"
+                "e1856505ee6b2f56"
             ]
         ]
     },
     {
-        "id": "da86e6940c4b196a",
+        "id": "22239578ded512d6",
         "type": "inject",
-        "z": "48ddb88.87e3e48",
+        "z": "5f4b1013672733ff",
         "name": "Interval reading",
         "props": [],
         "repeat": "60",
@@ -104,18 +105,18 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 330,
+        "x": 320,
         "y": 300,
         "wires": [
             [
-                "b191a81843c530f6"
+                "4e2f931437b585a0"
             ]
         ]
     },
     {
-        "id": "d973a10d68722cde",
+        "id": "98513da92e22a9a4",
         "type": "mqtt in",
-        "z": "48ddb88.87e3e48",
+        "z": "5f4b1013672733ff",
         "name": "thermiq/command/#",
         "topic": "ThermIQ/ThermIQ-mqtt/write/#",
         "qos": "2",
@@ -129,17 +130,17 @@
         "y": 200,
         "wires": [
             [
-                "9438d42f.c7dde8"
+                "6b5e5d5f61d3ad74"
             ]
         ]
     },
     {
-        "id": "99406082dbff6ab3",
+        "id": "2f4017034f49f602",
         "type": "delay",
-        "z": "48ddb88.87e3e48",
+        "z": "5f4b1013672733ff",
         "name": "",
         "pauseType": "delay",
-        "timeout": "1500",
+        "timeout": "1000",
         "timeoutUnits": "milliseconds",
         "rate": "1",
         "nbRateUnits": "1",
@@ -154,42 +155,60 @@
         "y": 240,
         "wires": [
             [
-                "b191a81843c530f6"
+                "4e2f931437b585a0"
             ]
         ]
     },
     {
-        "id": "407b194b.8886e8",
+        "id": "4b1d92a97c8bca90",
         "type": "serial in",
-        "z": "48ddb88.87e3e48",
+        "z": "5f4b1013672733ff",
         "name": "",
         "serial": "4c0cd345.bee2ac",
         "x": 210,
         "y": 60,
         "wires": [
             [
-                "d27593ca.20016"
+                "c5e41f03cc33415a",
+                "a154ff2dd4453844"
             ]
         ]
     },
     {
-        "id": "fad5e46b.97d518",
+        "id": "cb261068ed7b2834",
         "type": "serial out",
-        "z": "48ddb88.87e3e48",
+        "z": "5f4b1013672733ff",
         "name": "",
         "serial": "4c0cd345.bee2ac",
-        "x": 803.0142593383789,
-        "y": 179.00560760498047,
+        "x": 1220,
+        "y": 180,
         "wires": []
     },
     {
-        "id": "252c1115f8b1128a",
+        "id": "e1856505ee6b2f56",
         "type": "serial out",
-        "z": "48ddb88.87e3e48",
+        "z": "5f4b1013672733ff",
         "name": "",
         "serial": "4c0cd345.bee2ac",
-        "x": 870,
+        "x": 840,
         "y": 300,
+        "wires": []
+    },
+    {
+        "id": "c5e41f03cc33415a",
+        "type": "debug",
+        "z": "5f4b1013672733ff",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 400,
+        "y": 40,
         "wires": []
     },
     {
