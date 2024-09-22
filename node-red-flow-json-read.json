@@ -49,7 +49,7 @@
         "type": "function",
         "z": "5f4b1013672733ff",
         "name": "Write parser",
-        "func": "\nvar jsonString = msg.payload;\n\n// node.warn(\"payload = \" + jsonString);\n\n\nvar registerObj = JSON.parse(jsonString);\n// node.warn(\"registerObj = \" + registerObj);\nvar regKey = Object.keys(registerObj)[0]; \nvar value = parseInt(registerObj[regKey]); \n// node.warn(\"value = \" + value);\n\nif (regKey.startsWith(\"d\")) {\n    // Handle other cases as needed\n    node.warn(\"Change the ThermIQ MQTT Integration to use hexformat.\" + regKey);\n} else if (regKey.startsWith(\"r\")) {\n    var reg = parseInt(regKey.substring(1), 16);\n} else {\n    // Handle other cases as needed\n    node.warn(\"Unsupported prefix:\" + regKey);\n    return;\n}\n\n// node.warn(\"regKey = \" + regKey);\n\n// node.warn(\"reg = \" + reg);\n\nif(value < 0) {\n    value += 65536;\n}\n\n//if(reg >= 0 && reg <= 255 && value >= 0 && value < 65536) {\n// only allow for temp now   \nif (reg == 50 && value >= 0 && value < 65536) {\n    var valueHI = (value & 65280) >> 8;\n    var valueLO = (value & 255);\n    var a = reg.toString(16).padStart(2, '0');\n    var b = valueLO.toString(16).padStart(2, '0');\n    var c = valueHI.toString(16).padStart(2, '0');\n//    node.warn(\"my var abc = \" +  a + c + b);\n    var msg = {\n        payload: ('atw' + a + c + b).toUpperCase()\n    };\n\n    return [msg, null];\n}\n\nreturn [null, null];\n\n",
+        "func": "\nvar jsonString = msg.payload;\n\n// node.warn(\"payload = \" + jsonString);\n\n\nvar registerObj = JSON.parse(jsonString);\n// node.warn(\"registerObj = \" + registerObj);\nvar regKey = Object.keys(registerObj)[0]; \nvar value = parseInt(registerObj[regKey]); \n// node.warn(\"value = \" + value);\n\nif (regKey.startsWith(\"d\")) {\n    // Handle other cases as needed\n    node.warn(\"Change the ThermIQ MQTT Integration to use hexformat.\" + regKey);\n} else if (regKey.startsWith(\"r\")) {\n    var reg = parseInt(regKey.substring(1), 16);\n} else {\n    // Handle other cases as needed\n    node.warn(\"Unsupported prefix:\" + regKey);\n    return;\n}\n\n// node.warn(\"regKey = \" + regKey);\n\n// node.warn(\"reg = \" + reg);\n\nif(value < 0) {\n    value += 65536;\n}\n\nif(reg >= 0 && reg <= 127 && value >= 0 && value < 65536) {\n// only allow for temp now   \n//if (reg == 50 && value >= 0 && value < 65536) {\n    var valueHI = (value & 65280) >> 8;\n    var valueLO = (value & 255);\n    var a = reg.toString(16).padStart(2, '0');\n    var b = valueLO.toString(16).padStart(2, '0');\n    var c = valueHI.toString(16).padStart(2, '0');\n//    node.warn(\"my var abc = \" +  a + c + b);\n    var msg = {\n        payload: ('atw' + a + c + b).toUpperCase()\n    };\n// send payload to both outputs, tty and trigger read\n    return [msg, msg];\n}\n\nreturn [null, null];\n\n",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -84,7 +84,7 @@
         "bytopic": "all",
         "topic": "topic",
         "outputs": 1,
-        "x": 630,
+        "x": 860,
         "y": 300,
         "wires": [
             [
@@ -107,7 +107,7 @@
         "y": 300,
         "wires": [
             [
-                "4e2f931437b585a0"
+                "64b566943d9bc394"
             ]
         ]
     },
@@ -118,7 +118,7 @@
         "name": "thermiq/command/#",
         "topic": "ThermIQ/ThermIQ-mqtt/write/#",
         "qos": "2",
-        "datatype": "auto",
+        "datatype": "utf8",
         "broker": "ab0ac09d.da3f9",
         "nl": false,
         "rap": true,
@@ -138,22 +138,22 @@
         "z": "5f4b1013672733ff",
         "name": "",
         "pauseType": "delay",
-        "timeout": "1000",
-        "timeoutUnits": "milliseconds",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
         "rate": "1",
         "nbRateUnits": "1",
         "rateUnits": "second",
         "randomFirst": "1",
         "randomLast": "5",
         "randomUnits": "seconds",
-        "drop": false,
+        "drop": true,
         "allowrate": false,
         "outputs": 1,
-        "x": 580,
+        "x": 540,
         "y": 240,
         "wires": [
             [
-                "4e2f931437b585a0"
+                "64b566943d9bc394"
             ]
         ]
     },
@@ -188,7 +188,7 @@
         "z": "5f4b1013672733ff",
         "name": "",
         "serial": "4c0cd345.bee2ac",
-        "x": 980,
+        "x": 1200,
         "y": 300,
         "wires": []
     },
@@ -228,6 +228,31 @@
                 "a73fb7862b834e41"
             ],
             []
+        ]
+    },
+    {
+        "id": "64b566943d9bc394",
+        "type": "delay",
+        "z": "5f4b1013672733ff",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "5",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": true,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 560,
+        "y": 300,
+        "wires": [
+            [
+                "4e2f931437b585a0"
+            ]
         ]
     },
     {
