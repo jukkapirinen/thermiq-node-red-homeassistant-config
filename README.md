@@ -10,6 +10,7 @@
 * Node-RED
 * MQTT broker
 * Home Assistant for UI
+* Json flow works with Custom version of Arduino I2C Orja  https://github.com/jukkapirinen/arduino_i2c_orja/tree/batch-read
 
 # Screenshots
 ![UI](images/thermiq-mqtt-screenshot.png?raw=true "ThermIQ Lovelace")
